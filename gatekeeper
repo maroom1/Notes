@@ -1,0 +1,382 @@
+# 🚦 Gatekeeper
+
+An internal tool for enforcing compliance, security, and quality standards in CI/CD pipelines.
+
+## 📑 Table of Contents
+
+- [What is Gatekeeper?](#what-is-gatekeeper)
+- [Gate Statuses](#gate-statuses)
+- [How It Works](#how-it-works)
+- [Best Practices](#best-practices)
+
+---
+
+## 🎯 What is Gatekeeper?
+
+**Gatekeeper** is an internal tool that ensures certain preconditions are met before an application or artifact can move to the next step in the CI/CD pipeline.
+
+### Purpose
+
+Gatekeeper validates that deployments meet requirements for:
+- 🔒 **Security** - Vulnerability checks, security scans
+- ✅ **Compliance** - Regulatory and policy requirements  
+- 🎨 **Quality** - Code quality, test coverage, performance
+
+### How It Works
+
+1. Application/artifact is ready for deployment
+2. Gatekeeper runs configured **gates** (checks)
+3. Each gate validates specific preconditions
+4. Based on gate status, deployment is allowed or blocked
+5. Results are reported via email notifications
+
+> **In short**: Gatekeeper is a quality gate system that enforces standards before allowing deployments to runtime environments.
+
+---
+
+## 🚥 Gate Statuses
+
+Once gates are activated, they operate in one of two modes:
+
+### 🟡 Monitor Mode
+
+**Non-blocking** - Gate failures will NOT prevent deployment.
+
+```
+┌─────────────────────────────────────┐
+│  Gate Fails in Monitor Mode         │
+│                                     │
+│  ✓ Deployment CONTINUES             │
+│  ✓ Email notification sent          │
+│  ✓ Failure description included     │
+│  ✓ Documentation link provided      │
+│  ✗ Does NOT block deployment        │
+└─────────────────────────────────────┘
+```
+
+**Characteristics**:
+- ✅ Deployment proceeds regardless of result
+- 📧 User receives failure notification email
+- 📝 Email includes:
+  - Description of why the gate failed
+  - Link to documentation for remediation
+- 🎯 **Use case**: Monitoring new checks, gathering metrics, soft enforcement
+
+**When to use**:
+- Testing new gates before enforcement
+- Gradually introducing new requirements
+- Gathering baseline metrics
+- Non-critical quality checks
+
+---
+
+### 🔴 Protect Mode
+
+**Blocking** - Gate failures WILL prevent deployment.
+
+```
+┌─────────────────────────────────────┐
+│  Gate Fails in Protect Mode         │
+│                                     │
+│  ✗ Deployment BLOCKED               │
+│  ✓ Email notification sent          │
+│  ✓ Failure description included     │
+│  ✓ Documentation link provided      │
+│  ⚠️  Must fix before proceeding     │
+└─────────────────────────────────────┘
+```
+
+**Characteristics**:
+- 🛑 Deployment is blocked if gate fails
+- 📧 User receives failure notification email
+- 📝 Email includes:
+  - Description of why the gate failed
+  - Link to documentation for remediation
+- 🔒 **Use case**: Enforcing critical security, compliance, and quality standards
+
+**When to use**:
+- Security vulnerability thresholds
+- Compliance requirements
+- Critical quality standards
+- Production deployments
+
+---
+
+## 🔄 Gate Workflow
+
+### Typical Pipeline Flow
+
+```
+┌──────────────┐
+│  Code Commit │
+└──────┬───────┘
+       │
+       ▼
+┌──────────────┐
+│  Build       │
+└──────┬───────┘
+       │
+       ▼
+┌──────────────────────┐
+│  Gatekeeper Gates    │
+│                      │
+│  ┌────────────────┐ │
+│  │ Security Scan  │ │ ◄─── Monitor or Protect
+│  └────────────────┘ │
+│                      │
+│  ┌────────────────┐ │
+│  │ Quality Check  │ │ ◄─── Monitor or Protect
+│  └────────────────┘ │
+│                      │
+│  ┌────────────────┐ │
+│  │ Compliance     │ │ ◄─── Monitor or Protect
+│  └────────────────┘ │
+└──────┬───────────────┘
+       │
+       ├─── ✅ All gates pass (or Monitor mode)
+       │
+       ▼
+┌──────────────┐
+│  Deploy to   │
+│  Environment │
+└──────────────┘
+       │
+       ├─── ❌ Any Protect gate fails
+       │
+       ▼
+┌──────────────┐
+│  Deployment  │
+│  BLOCKED     │
+│  + Email     │
+└──────────────┘
+```
+
+---
+
+## 📊 Status Comparison
+
+| Feature | Monitor Mode 🟡 | Protect Mode 🔴 |
+|---------|----------------|----------------|
+| **Blocks Deployment** | ❌ No | ✅ Yes |
+| **Sends Notification** | ✅ Yes | ✅ Yes |
+| **Includes Failure Reason** | ✅ Yes | ✅ Yes |
+| **Provides Documentation Link** | ✅ Yes | ✅ Yes |
+| **Requires Fix to Proceed** | ❌ No | ✅ Yes |
+| **Use Case** | Monitoring, metrics | Enforcement |
+
+---
+
+## 📧 Email Notifications
+
+Both modes send email notifications to the deploying user when a gate fails.
+
+### Email Contents
+
+```
+📧 Gatekeeper Gate Failure Notification
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Status: [MONITOR / PROTECT]
+Gate: [Gate Name]
+Application: [App Name]
+Deployed by: [User Email]
+
+❌ Gate Failed
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Reason:
+[Detailed description of why the gate failed]
+
+📚 Documentation:
+[Link to relevant documentation for remediation]
+
+Action Required:
+[MONITOR: No action required, deployment continued]
+[PROTECT: Fix issues and redeploy]
+```
+
+---
+
+## 💡 Best Practices
+
+### 1. Start with Monitor Mode
+```
+New Gate → Monitor Mode (collect data) → Protect Mode (enforce)
+```
+- Test gates in Monitor mode first
+- Analyze failure patterns
+- Update documentation
+- Communicate changes to teams
+- Switch to Protect mode
+
+### 2. Configure Appropriate Gates
+
+**Security Gates** (Protect Mode):
+- CVE vulnerability scans
+- Dependency security checks
+- Secret detection
+- Security policy compliance
+
+**Quality Gates** (Monitor/Protect based on criticality):
+- Code coverage thresholds
+- Test pass rates
+- Code quality metrics
+- Performance benchmarks
+
+**Compliance Gates** (Protect Mode):
+- License compliance
+- Regulatory requirements
+- Policy adherence
+- Audit trail validation
+
+### 3. Maintain Clear Documentation
+
+Each gate should have:
+- ✅ Clear failure criteria
+- ✅ Remediation steps
+- ✅ Links to tools and resources
+- ✅ Contact information for support
+- ✅ Examples of common failures
+
+### 4. Monitor Gate Performance
+
+Track metrics:
+- Gate failure rates
+- Time to remediate
+- False positive rates
+- Impact on deployment velocity
+- Team adoption
+
+---
+
+## 🎯 Common Use Cases
+
+### Example 1: Security Vulnerability Gate
+
+```yaml
+gate: security-scan
+mode: protect
+threshold: high-severity-vulnerabilities
+action: block-deployment
+
+rules:
+  - no critical CVEs
+  - no high severity vulnerabilities > 30 days old
+  - all dependencies scanned
+```
+
+**Result**:
+- ✅ Pass: No critical/high vulnerabilities → Deploy
+- ❌ Fail: Critical vulnerabilities found → Block + Email
+
+---
+
+### Example 2: Test Coverage Gate
+
+```yaml
+gate: test-coverage
+mode: monitor  # Currently in monitoring phase
+threshold: 80%
+action: notify-only
+
+rules:
+  - unit test coverage >= 80%
+  - integration test coverage >= 60%
+  - all tests passing
+```
+
+**Result**:
+- ✅ Pass: Coverage meets threshold → Deploy + Success email
+- ⚠️ Fail: Low coverage → Deploy + Warning email
+
+---
+
+### Example 3: Compliance Gate
+
+```yaml
+gate: license-compliance
+mode: protect
+action: block-deployment
+
+rules:
+  - no GPL licenses in production
+  - all dependencies have approved licenses
+  - license audit completed
+```
+
+**Result**:
+- ✅ Pass: All licenses approved → Deploy
+- ❌ Fail: Unapproved license found → Block + Email
+
+---
+
+## 🚀 Integration with CI/CD
+
+### Pipeline Integration
+
+Gatekeeper typically runs between build and deployment:
+
+```yaml
+# Example CI/CD Pipeline
+stages:
+  - build
+  - test
+  - gatekeeper  # Gates run here
+  - deploy
+
+gatekeeper:
+  stage: gatekeeper
+  script:
+    - run-gatekeeper-gates
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+  when: always
+```
+
+---
+
+## 🔗 Related Topics
+
+- [Continuous Integration](continuous-integration.md)
+- [Continuous Deployment](continuous-deployment.md)
+- [Security Best Practices](../best-practices/security-best-practices.md)
+- [DevOps Best Practices](../best-practices/devops-best-practices.md)
+
+---
+
+## 📚 Key Takeaways
+
+✅ **Gatekeeper enforces standards** before deployments reach runtime environments
+
+✅ **Monitor mode** allows deployments but sends notifications (non-blocking)
+
+✅ **Protect mode** blocks deployments that fail gates (blocking)
+
+✅ **All failures** generate email notifications with remediation guidance
+
+✅ **Start with Monitor** to gather data, then switch to Protect for enforcement
+
+✅ **Use for critical checks** like security, compliance, and quality gates
+
+---
+
+[← Back to DevOps](README.md) | [← Back to Home](../../README.md)
+
+-----
+
+
+Gatekeeper
+
+What are the gate statuses and what do they mean?
+–
+There are two statuses of gates once they are activated.
+* Monitor - In this mode, the gate will NOT block your deployment if the gate fails. But the gate will notify you of the failure via an email to the user who deployed. This email will describe why the gate failed along with a link to further documentation.
+* Protect - In this mode, the gate WILL block your deployment if it fails. It will also notify you of failure via an email to the user who deployed. This email will give you a description of why the gate failed along with a link to further documentation.
+
+
+What is Gatekeeper?
+Gatekeeper ensures that certain preconditions (security, compliance, and quality) are met before an application or artifact in Walmart can move to the next step in the CI/CD pipeline (i.e., deployment into a runtime environment). These preconditions are checked in what we call gates. 
+In short, Gatekeeper is an internal tool to enforce compliance, security, and quality standards in the pipeline.
+
+
+
