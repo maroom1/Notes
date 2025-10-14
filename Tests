@@ -1,0 +1,25 @@
+Tests
+
+Types of Software Testing
+Objective: Identify and understand the various types of software testing
+Topics
+* Static tests 
+* Dynamic tests
+* Unit tests
+* Component tests
+* Contract tests
+* Integration tests
+* Visual regression tests
+* End-to-end tests
+
+
+Testing Shapes
+Objective: Explore common testing shapes to visualize balanced testing approaches
+Topics
+Testing shapes to use at Walmart:
+* Testing Lava Lamp
+* Testing Pyramid
+* Testing Trophy
+
+
+E2e -> functional -> integration-> unit 
