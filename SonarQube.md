@@ -607,3 +607,12 @@ Access the SonarQube dashboard:
 ---
 
 [← Back to DevOps](README.md) | [← Back to Home](../../README.md)
+
+----------
+
+
+SonarQube
+
+SonarQube is an automatic code review tool that detects bugs, vulnerabilities, and code smells in code. It can integrate with existing workflows to enable continuous code inspection across project branches and pull requests. 
+SonarQube provides detailed reports on issues found in each of the projects, suggest improvements, and tracks code quality metrics, all of which can help improve the quality of the overall code.
+SonarQube Project Documentation:
