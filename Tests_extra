@@ -1,0 +1,481 @@
+# 🧪 Software Testing
+
+A comprehensive guide to software testing types, strategies, and best practices.
+
+## 📑 Table of Contents
+
+- [Types of Software Testing](#types-of-software-testing)
+- [Testing Shapes](#testing-shapes)
+- [Testing Hierarchy](#testing-hierarchy)
+
+---
+
+## Types of Software Testing
+
+Understanding the various types of software testing is crucial for building reliable and maintainable applications.
+
+### 🔍 Static Tests
+
+**Static testing** involves examining code without executing it.
+
+- **Purpose**: Find defects early in the development cycle
+- **Methods**:
+  - Code reviews
+  - Static code analysis
+  - Linting
+  - Type checking (TypeScript, Flow)
+- **Benefits**:
+  - Catches errors before runtime
+  - Enforces coding standards
+  - Improves code quality
+  - Cost-effective (finds issues early)
+
+**Example Tools**: ESLint, Prettier, SonarQube, TypeScript
+
+---
+
+### ⚡ Dynamic Tests
+
+**Dynamic testing** involves executing code and validating behavior.
+
+- **Purpose**: Verify that code works as expected during runtime
+- **Characteristics**:
+  - Tests running code
+  - Validates functionality
+  - Checks performance
+  - Verifies behavior under various conditions
+- **When to use**:
+  - After code is written
+  - During CI/CD pipelines
+  - Before deployment
+
+---
+
+### 🔬 Unit Tests
+
+**Unit tests** verify individual units of code in isolation.
+
+- **Scope**: Single function, method, or class
+- **Characteristics**:
+  - Fast execution
+  - Isolated (mocked dependencies)
+  - High volume
+  - Easy to debug
+- **Best Practices**:
+  - Test one thing at a time
+  - Use descriptive test names
+  - Follow AAA pattern (Arrange, Act, Assert)
+  - Mock external dependencies
+
+```javascript
+// Example: Unit Test
+describe('calculateTotal', () => {
+  it('should sum up item prices correctly', () => {
+    const items = [
+      { price: 10 },
+      { price: 20 },
+      { price: 30 }
+    ];
+    expect(calculateTotal(items)).toBe(60);
+  });
+});
+```
+
+---
+
+### 🧩 Component Tests
+
+**Component tests** verify individual components with their dependencies.
+
+- **Scope**: Single component/module with real dependencies
+- **Characteristics**:
+  - Test component behavior
+  - Include child components
+  - Verify props, state, events
+  - DOM interactions
+- **Frontend Example**: Testing a React/Vue component
+- **Backend Example**: Testing a service class with its repository
+
+```javascript
+// Example: React Component Test
+test('Button displays correct text and handles click', () => {
+  const handleClick = jest.fn();
+  render(<Button onClick={handleClick}>Click Me</Button>);
+  
+  const button = screen.getByRole('button');
+  expect(button).toHaveTextContent('Click Me');
+  
+  fireEvent.click(button);
+  expect(handleClick).toHaveBeenCalledTimes(1);
+});
+```
+
+---
+
+### 🤝 Contract Tests
+
+**Contract tests** ensure API agreements between services are maintained.
+
+- **Purpose**: Verify that services can communicate as expected
+- **Key Concepts**:
+  - Provider: Service that offers the API
+  - Consumer: Service that uses the API
+  - Contract: Agreement on API structure
+- **Benefits**:
+  - Prevents breaking changes
+  - Enables independent deployment
+  - Supports microservices architecture
+- **Tools**: Pact, Spring Cloud Contract
+
+```javascript
+// Example: Consumer Contract Test
+describe('User API Contract', () => {
+  it('should return user with expected structure', async () => {
+    await provider.addInteraction({
+      state: 'user exists',
+      uponReceiving: 'a request for user data',
+      withRequest: {
+        method: 'GET',
+        path: '/api/users/123'
+      },
+      willRespondWith: {
+        status: 200,
+        body: {
+          id: 123,
+          name: 'John Doe',
+          email: 'john@example.com'
+        }
+      }
+    });
+  });
+});
+```
+
+---
+
+### 🔗 Integration Tests
+
+**Integration tests** verify that multiple components work together correctly.
+
+- **Scope**: Multiple modules/services interacting
+- **What to test**:
+  - Module interactions
+  - Database operations
+  - External API calls
+  - Message queues
+  - File system operations
+- **Characteristics**:
+  - Slower than unit tests
+  - Use real or test databases
+  - May require test containers
+  - More complex setup
+
+```javascript
+// Example: Integration Test
+describe('User Registration Flow', () => {
+  it('should create user and send welcome email', async () => {
+    const userData = {
+      email: 'test@example.com',
+      password: 'secure123'
+    };
+    
+    const response = await request(app)
+      .post('/api/register')
+      .send(userData);
+    
+    expect(response.status).toBe(201);
+    
+    // Verify user in database
+    const user = await User.findOne({ email: userData.email });
+    expect(user).toBeDefined();
+    
+    // Verify email was sent
+    expect(emailService.send).toHaveBeenCalledWith(
+      expect.objectContaining({
+        to: userData.email,
+        subject: 'Welcome!'
+      })
+    );
+  });
+});
+```
+
+---
+
+### 🎨 Visual Regression Tests
+
+**Visual regression tests** detect unintended visual changes in UI.
+
+- **Purpose**: Catch visual bugs and CSS issues
+- **How it works**:
+  1. Capture screenshot of baseline
+  2. Capture screenshot after changes
+  3. Compare pixel differences
+  4. Flag any visual changes
+- **Use Cases**:
+  - CSS refactoring
+  - Component library updates
+  - Cross-browser testing
+  - Responsive design verification
+- **Tools**: Percy, Chromatic, BackstopJS, Applitools
+
+```javascript
+// Example: Visual Regression Test
+describe('Homepage Visual Tests', () => {
+  it('should match baseline screenshot', async () => {
+    await page.goto('http://localhost:3000');
+    await page.waitForSelector('.hero-section');
+    
+    const screenshot = await page.screenshot();
+    expect(screenshot).toMatchImageSnapshot({
+      failureThreshold: 0.01,
+      failureThresholdType: 'percent'
+    });
+  });
+});
+```
+
+---
+
+### 🎯 End-to-End Tests (E2E)
+
+**End-to-end tests** validate complete user workflows from start to finish.
+
+- **Scope**: Entire application including frontend, backend, database
+- **Characteristics**:
+  - Simulates real user behavior
+  - Tests critical user journeys
+  - Slowest but most comprehensive
+  - Runs in real browser environment
+- **What to test**:
+  - Login/authentication flows
+  - Checkout processes
+  - Form submissions
+  - Navigation paths
+  - Critical business workflows
+- **Tools**: Cypress, Playwright, Selenium
+
+```javascript
+// Example: E2E Test
+describe('E-commerce Purchase Flow', () => {
+  it('should complete full purchase journey', async () => {
+    // Login
+    await page.goto('/login');
+    await page.fill('[name="email"]', 'user@example.com');
+    await page.fill('[name="password"]', 'password123');
+    await page.click('button[type="submit"]');
+    
+    // Browse and add to cart
+    await page.goto('/products');
+    await page.click('[data-product="123"]');
+    await page.click('button:has-text("Add to Cart")');
+    
+    // Checkout
+    await page.click('[aria-label="Cart"]');
+    await page.click('button:has-text("Checkout")');
+    
+    // Payment
+    await page.fill('[name="cardNumber"]', '4111111111111111');
+    await page.fill('[name="expiry"]', '12/25');
+    await page.fill('[name="cvv"]', '123');
+    await page.click('button:has-text("Place Order")');
+    
+    // Verify success
+    await expect(page.locator('.success-message')).toBeVisible();
+    await expect(page.locator('.order-number')).toContainText('ORDER-');
+  });
+});
+```
+
+---
+
+## 🔺 Testing Shapes
+
+Different organizations use various testing shapes to visualize their testing strategy and maintain balance.
+
+### 🌋 Testing Lava Lamp
+
+A testing strategy used at Walmart that emphasizes:
+
+- **Characteristics**:
+  - Fluid and adaptable
+  - Focus on risk-based testing
+  - Continuous feedback loops
+  - Emphasis on critical paths
+- **Philosophy**: Tests should flow and adapt to where the risk is highest
+
+```
+        🔥
+       E2E
+      ╱   ╲
+     ╱     ╲
+    Integration
+   ╱    |    ╲
+  ╱     |     ╲
+ Functional Tests
+╱       |       ╲
+════════════════════
+    Unit Tests
+```
+
+---
+
+### 🔺 Testing Pyramid
+
+The classic testing approach with a solid foundation.
+
+```
+       ╱╲
+      ╱E2╲        ← Few, slow, expensive
+     ╱────╲
+    ╱ Int. ╲      ← Some, moderate speed
+   ╱────────╲
+  ╱   Unit   ╲    ← Many, fast, cheap
+ ╱────────────╲
+```
+
+**Distribution**:
+- **70%** Unit Tests
+- **20%** Integration Tests
+- **10%** E2E Tests
+
+**Benefits**:
+- Fast feedback
+- Easy to maintain
+- Cost-effective
+- Quick debugging
+
+---
+
+### 🏆 Testing Trophy
+
+Modern approach popularizing integration tests.
+
+```
+      ___
+     /   \
+    | E2E |        ← Few critical paths
+    |_____|
+   /       \
+  | Integ.  |      ← Primary focus
+  |_________|
+ /           \
+|   Unit      |    ← Support layer
+|_____________|
+   Static          ← Foundation
+```
+
+**Distribution**:
+- **50%** Integration Tests (largest)
+- **30%** Unit Tests
+- **15%** E2E Tests
+- **5%** Static Tests (foundation)
+
+**Philosophy**: Integration tests give the best ROI
+
+---
+
+## 📊 Testing Hierarchy
+
+Understanding the testing hierarchy helps prioritize testing efforts:
+
+```
+┌─────────────────────────────────┐
+│      E2E (End-to-End)          │  ← Complete user journeys
+│      Highest confidence         │     Slowest, most expensive
+│      Lowest quantity            │     Hardest to maintain
+└─────────────────────────────────┘
+            ↑
+┌─────────────────────────────────┐
+│      Functional Tests           │  ← Feature-level testing
+│      High confidence            │     Business logic validation
+│      Moderate quantity          │     Moderate speed
+└─────────────────────────────────┘
+            ↑
+┌─────────────────────────────────┐
+│      Integration Tests          │  ← Module interactions
+│      Good confidence            │     DB, APIs, services
+│      Higher quantity            │     Faster than E2E
+└─────────────────────────────────┘
+            ↑
+┌─────────────────────────────────┐
+│      Unit Tests                 │  ← Individual functions
+│      Fast feedback              │     Isolated testing
+│      Highest quantity           │     Easy debugging
+│      Lowest cost                │     Quick to write
+└─────────────────────────────────┘
+```
+
+### 🎯 Testing Strategy
+
+**Bottom-Up Approach**: Build from Unit → Integration → Functional → E2E
+
+1. **Start with Unit Tests**
+   - Cover edge cases
+   - Test business logic
+   - Fast feedback loop
+
+2. **Add Integration Tests**
+   - Verify component interactions
+   - Test database operations
+   - Validate API contracts
+
+3. **Include Functional Tests**
+   - Test complete features
+   - Validate user scenarios
+   - Check business workflows
+
+4. **Implement Critical E2E Tests**
+   - Focus on critical paths
+   - Test happy paths
+   - Cover revenue-generating flows
+
+---
+
+## ✅ Best Practices
+
+### General Testing Principles
+
+1. **Write tests first** (TDD when possible)
+2. **Keep tests independent** (no shared state)
+3. **Test behavior, not implementation**
+4. **Use descriptive test names**
+5. **Follow the AAA pattern**: Arrange, Act, Assert
+6. **Mock external dependencies** appropriately
+7. **Keep tests fast** and reliable
+8. **Maintain test coverage** (aim for 80%+)
+
+### Test Naming Convention
+
+```javascript
+// Good: Describes what is being tested and expected outcome
+test('login with valid credentials redirects to dashboard')
+
+// Bad: Vague and unclear
+test('test1')
+```
+
+### Testing Checklist
+
+- [ ] All critical paths have E2E tests
+- [ ] Integration tests cover module interactions
+- [ ] Unit tests cover business logic
+- [ ] Edge cases are tested
+- [ ] Error handling is verified
+- [ ] Tests run in CI/CD pipeline
+- [ ] Tests are maintainable and readable
+- [ ] Mock data is realistic
+- [ ] Tests are independent and can run in any order
+
+---
+
+## 🔗 Related Topics
+
+- [Testing Strategies](../best-practices/testing-strategies.md)
+- [Test-Driven Development](../best-practices/tdd.md)
+- [CI/CD](../devops/continuous-integration.md)
+- [Code Quality](../best-practices/code-quality.md)
+
+---
+
+[← Back to Home](../../README.md)
